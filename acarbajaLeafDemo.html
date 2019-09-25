@@ -1,0 +1,91 @@
+<html>
+  <head>
+    <title>Floating Leaves Demo</title>
+    <style>
+      /* feel free to style the canvas any way you want. If you want it to
+      use the entire window, set width: 100% and height: 100%. */
+      /* THREE JS Version:
+      http://cs.wellesley.edu/~cs307/threejs/lib/three-r80.js 
+      
+      transparent texture inspiration: https://medium.com/@soffritti.pierfrancesco/animations-with-alpha-textures-in-three-js-52a33654e137
+      
+      */
+      
+      canvas {
+          display: block;
+          margin: 10px auto;
+          width: 80%;
+          height: 500px;
+      }
+    </style>
+    <link rel="stylesheet" type="text/css" href="https://cs.wellesley.edu/~cs307/307.css">
+    <link rel="stylesheet" type="text/css" href="https://cs.wellesley.edu/~cs307/js/google-code-prettify/prettify-sda.css">
+    <script src="three.min.js"></script>
+    <script src="tw.js"></script>
+    <script src="OrbitControls.js"></script>
+    <script src="dat.gui.min.js"></script>
+
+     <script src="acarbajaLeaf.js?v=2"></script>
+
+  </head>
+<body>
+
+<h1>Leaf Box - Hershel</h1>
+<p style="font-size:10px">Leaves used in Heikala model, this model may not be used for
+commercial purposes. </p>
+<script>
+
+     
+// SCENE SET UP ==============================================================
+
+var scene = new THREE.Scene();
+
+
+
+var leafParams = {width:20,   //dimension of leaf box
+                    height: 20,
+                    depth:20,
+                    
+                    xCoord: 0, //where you want the top left corner of the box
+                    yCoord: 0,
+                    zCoord: 0,
+                    
+                    numLeaves: 20 //number of leaves the box contains
+};
+
+
+//loading leaf texture, alternative img: bedding.jpg, default: leaf3.png
+//the first 3 "leaf.png"'s are placeholders due to texture index in makeLeaf.
+// This is so the makeLeaf function compatable was compatable with the texture 
+// loader in acarbajaSleepDemoPlus.html (the main file)
+TW.loadTextures(["leaf.jpg","leaf.jpg","leaf.jpg", "leaf3.png"],
+                function (texture) {
+                    displayLeaves(leafParams,texture);
+                    
+                } );
+                
+// adding light so we can see our nice leaves
+var pointLight = new THREE.PointLight ( 0xffffff, 1, 200, 0);
+pointLight.position.set(5,0,5);
+scene.add(pointLight);
+
+var ambientLight = new THREE.AmbientLight ( 0xffffff, 0.7)
+scene.add(ambientLight)
+ 
+
+// ===============================================================================
+
+var renderer = new THREE.WebGLRenderer();
+
+TW.mainInit(renderer,scene);
+
+TW.cameraSetup(renderer,
+               scene,
+               {minx: 0, maxx: 20,
+                miny: 0, maxy: 20,
+                minz: 0, maxz: 20});
+
+</script>
+<!--#include virtual="/~cs307/footer.shtml" -->
+</body>
+</html>

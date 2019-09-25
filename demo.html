@@ -1,0 +1,201 @@
+<html>
+  <head>
+    <title>Asleep Deluxe</title>
+    <style>
+      /* feel free to style the canvas any way you want. If you want it to
+      use the entire window, set width: 100% and height: 100%. */
+      /* THREE JS Version:
+      http://cs.wellesley.edu/~cs307/threejs/lib/three-r80.js 
+      
+      camera inspiration: https://codepen.io/wiledal/pen/WvNvEq
+      */
+      
+      canvas {
+          display: block;
+          margin: 10px auto;
+          width: 80%;
+          height: 500px;
+      }
+    </style>
+    <link rel="stylesheet" type="text/css" href="https://cs.wellesley.edu/~cs307/307.css">
+    <link rel="stylesheet" type="text/css" href="https://cs.wellesley.edu/~cs307/js/google-code-prettify/prettify-sda.css">
+    <script src="three.min.js"></script>
+    <script src="tw.js"></script>
+    <script src="OrbitControls.js"></script>
+    <script src="dat.gui.min.js"></script>
+     <script src="acarbajaSleep.js?v=7"></script>
+     <script src="acarbajaLeaf.js?v=2"></script>
+  </head>
+<body>
+
+<h1>Sleep Deluxe- Hershel</h1>
+<p style="font-size:10px">Inspired by Heikala, this model may not be used for
+commercial purposes. </p>
+<p style="font-size:10px"> This scene depicts a person sleeping in on a 
+sunny morning. The window was left open and there are leaves that 
+have flown into the bedroom from the outside. </p>
+<script>
+
+// these are for our human
+var params = {
+    detail: 10,
+    
+    noseLength: 0.6,
+    noseRadius: 0.3,
+    
+    eyeRadius: 0.4,
+    eyeAngleX: -Math.PI/12, // positioning of eye on face
+    eyeAngleY: +Math.PI/12,
+    eyeTube: 0.07, //thickness of eyelashes
+    eyeArc:-Math.PI,
+    eyelashLength: 0.2,
+
+    eyebrowRadius: 0.2,
+    eyebrowXScalar: 1.7,
+    eyebrowAngleX: -Math.PI/6,
+    eyebrowAngleY: +Math.PI/12,
+    
+    handRadius: .7,
+    fingerRadius: .2,
+    fingerYScalar: 3,
+
+    headRadius: 2,
+
+    bodyMaterial: new THREE.MeshLambertMaterial({color: "#f2af55"}), //tan
+    noseMaterial: new THREE.MeshLambertMaterial({color: "red"}),
+    fingerMaterial: new THREE.MeshBasicMaterial({color: "black"}),
+    eyeLashMaterial: new THREE.MeshBasicMaterial({color: "black"}),
+    eyeBrowsMaterial: new THREE.MeshBasicMaterial({color: "#903808"}), // dark brown
+    hairMaterial: new THREE.MeshLambertMaterial({color: "#b25b2b"}), //brown
+    
+    wallColor: new THREE.MeshBasicMaterial({color: "#ffc3e1"}) //pink
+};
+
+var leafParams = {width:20,   //dimension of leaf box
+                    height: -35,
+                    depth:20,
+                    
+                    xCoord: -8, //where you want the top left corner of the box
+                    yCoord: 0,
+                    zCoord: 0,
+                    
+                    numLeaves: 25 //number of leaves the box contains
+};
+
+
+// SCENE SET UP ==============================================================
+
+var scene = new THREE.Scene();
+
+
+//human
+var human = acarbajaSleepingPerson(params);
+scene.add(human);
+
+//loading textures for the bedding
+TW.loadTextures(["bedding.jpg","sheets.jpg","view2.jpg","leaf3.png"
+                ,"marina.jpg","joeAndKarina.jpg","starsResized.jpg"],
+                function (textures) {
+                    displayFurniture(textures,params);
+                    displayLeaves(leafParams,textures);
+
+});
+
+// adding light so we can see our bed and leaves
+var pointLight = new THREE.PointLight ( 0xffffff, 1, 200, 0);
+pointLight.position.set(5,0,5);
+scene.add(pointLight);
+
+var ambientLight = new THREE.AmbientLight ( 0xffffff, 0.7)
+scene.add(ambientLight)
+
+// ===============================================================================
+
+var renderer = new THREE.WebGLRenderer();
+
+TW.mainInit(renderer,scene);
+
+
+//Note from Hershel: The decision to put all of the animation features in this
+// file instead of a separate source file/using an API was a concious decision.
+// Methods for moving animations outside of the main html file were
+// not covered due to the scope of the class this year. (Especially in the
+// case of a moving camera).
+
+// CAMERA SETUP AND STARS ANIMATION ===================================================
+
+
+var camIndex = 0;
+var topOfFace = new THREE.Vector3(0,0,3); // location we will be looking at
+var camera = new THREE.PerspectiveCamera( 75,  400/300, 1, 100 );
+
+function setUpCamera(camera){
+  camera.lookAt(topOfFace);
+  camera.position.set(3,-5,20); // middle of bed
+  camera.up.set(0,0,1);
+  scene.add(camera);
+}
+
+
+// this creates an oval-shaped spline that will be the loop route for
+// our moving/aniamted camera
+var spline = new THREE.SplineCurve3([
+                                    new THREE.Vector3(3,-5,20),
+                                    new THREE.Vector3(8,-10,19),
+                                    new THREE.Vector3(3,-30,19),
+                                    new THREE.Vector3(-2,-10,20), 
+                                    new THREE.Vector3(3,-5,20)]);
+                                    
+
+// GLOBE 
+
+    var sphereGeom = new THREE.SphereGeometry(35,32,32);
+    var sphereMat = new THREE.MeshBasicMaterial({color:0xffffff, 
+                                                side:THREE.BackSide,
+    });
+    var sphere = new THREE.Mesh(sphereGeom,sphereMat);
+    var stars = new THREE.TextureLoader().load( "starsResized2.png" ); //loading separately so we can animate it
+    sphere.material.map = stars;
+    scene.add(sphere);
+
+
+// ANIMATION 
+
+/*moveCamera is used to make our camera loop around the scene. 
+We get an (x,y,z) coordinate using getPoint on our spline object,
+and then set the position of the camera to that point.
+
+We rotate our sphere to make it seem like the stars texture is moving.*/
+function animateCameraAndSphere(){
+  camIndex++;
+  
+  // we will be taking 500 different points on our spline for our camera route
+  if (camIndex > 500){ 
+    camIndex = 0 //start back at the beginning of the spline
+  }
+  
+  var position = spline.getPoint(camIndex / 500); // get point on spline @ position t
+  
+  camera.position.set(position.x,position.y,position.z); // move camera
+  camera.lookAt(topOfFace); //we will be looking at the top of the faces
+ 
+  
+
+  //spinning the stars around by changing our sphere
+   scene.remove(sphere);
+   sphere.rotation.x = Math.PI/250*(camIndex+1);
+   // it takes 2PI to go around the circle, and we have 500 animation steps
+   scene.add(sphere);
+
+  renderer.render(scene,camera);
+  requestAnimationFrame(animateCameraAndSphere);
+}
+
+setUpCamera(camera);
+animateCameraAndSphere();
+
+   
+</script>
+<!--#include virtual="/~cs307/footer.shtml" -->
+</body>
+</html>

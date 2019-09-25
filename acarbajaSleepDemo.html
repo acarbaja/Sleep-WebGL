@@ -1,0 +1,106 @@
+<html>
+  <head>
+    <title>Asleep</title>
+    <style>
+      /* feel free to style the canvas any way you want. If you want it to
+      use the entire window, set width: 100% and height: 100%. */
+      /* THREE JS Version:
+      http://cs.wellesley.edu/~cs307/threejs/lib/three-r80.js */
+      
+      canvas {
+          display: block;
+          margin: 10px auto;
+          width: 80%;
+          height: 500px;
+      }
+    </style>
+    <link rel="stylesheet" type="text/css" href="https://cs.wellesley.edu/~cs307/307.css">
+    <link rel="stylesheet" type="text/css" href="https://cs.wellesley.edu/~cs307/js/google-code-prettify/prettify-sda.css">
+    <script src="three.min.js"></script>
+    <script src="tw.js"></script>
+    <script src="OrbitControls.js"></script>
+    <script src="dat.gui.min.js"></script>
+    <script src="acarbajaSleep.js?v=2"></script>
+     <script src="acarbajaLeaf.js"></script>
+  </head>
+<body>
+
+<h1>Sleep - Hershel</h1>
+<p style="font-size:10px">Inspired by Heikala, this model may not be used for
+commercial purposes. </p>
+<script>
+
+//
+var params = {
+    detail: 10,
+    
+    noseLength: 0.6,
+    noseRadius: 0.3,
+    
+    eyeRadius: 0.4,
+    eyeAngleX: -Math.PI/12, // positioning of eye on face
+    eyeAngleY: +Math.PI/12,
+    eyeTube: 0.07, //thickness of eyelashes
+    eyeArc:-Math.PI,
+    eyelashLength: 0.2,
+
+    eyebrowRadius: 0.2,
+    eyebrowXScalar: 1.7,
+    eyebrowAngleX: -Math.PI/6,
+    eyebrowAngleY: +Math.PI/12,
+    
+    handRadius: .7,
+    fingerRadius: .2,
+    fingerYScalar: 3,
+
+    headRadius: 2,
+
+    bodyMaterial: new THREE.MeshBasicMaterial({color: "#f2af55"}), //tan
+    noseMaterial: new THREE.MeshBasicMaterial({color: "red"}),
+    fingerMaterial: new THREE.MeshBasicMaterial({color: "black"}),
+    eyeLashMaterial: new THREE.MeshBasicMaterial({color: "black"}),
+    eyeBrowsMaterial: new THREE.MeshBasicMaterial({color: "#903808"}), // dark brown
+    hairMaterial: new THREE.MeshBasicMaterial({color: "#b25b2b"}) //brown
+};
+     
+     
+
+
+// SCENE SET UP ==============================================================
+
+var scene = new THREE.Scene();
+
+//human
+var human = acarbajaSleepingPerson(params);
+scene.add(human);
+
+//loading textures for the bedding
+TW.loadTextures(["bedding.jpg","sheets.jpg"],
+                function (textures) {
+                    displayBed(textures,params);
+                } );
+                
+// adding light so we can see our bed
+var pointLight = new THREE.PointLight ( 0xffffff, 1, 200, 0);
+pointLight.position.set(5,0,5);
+scene.add(pointLight);
+
+var ambientLight = new THREE.AmbientLight ( 0xffffff, 0.7)
+scene.add(ambientLight)
+
+// ===============================================================================
+
+var renderer = new THREE.WebGLRenderer();
+
+TW.mainInit(renderer,scene);
+
+TW.cameraSetup(renderer,
+               scene,
+               {minx: -10, maxx: 10,
+                miny: -25, maxy: 0,
+                minz: -10, maxz: 10});
+
+</script>
+<!--#include virtual="/~cs307/footer.shtml" -->
+</body>
+</html>
